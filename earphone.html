@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Audio Passthrough</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>Microphone to Earphone Passthrough</h2>
+    <p>Plug in your earphones before starting to avoid loud feedback screeching!</p>
+    <button id="startButton">Start Audio</button>
+
+    <script>
+        const startButton = document.getElementById('startButton');
+        let audioCtx;
+        let stream;
+
+        startButton.addEventListener('click', async () => {
+            // Initialize audio context after user gesture (browser security requirement)
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            try {
+                // Request microphone access
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: false, // Turn off built-in phone processing
+                        noiseSuppression: false,
+                        latency: 0 // Request lowest possible latency
+                    } 
+                });
+
+                // Create audio nodes
+                const source = audioCtx.createMediaStreamSource(stream);
+                
+                // Connect the mic directly to the speakers/earphones
+                source.connect(audioCtx.destination);
+
+                startButton.textContent = "Audio Active";
+                startButton.disabled = true;
+
+            } catch (err) {
+                alert('Error accessing microphone: ' + err);
+            }
+        });
+    </script>
+</body>
+</html>
